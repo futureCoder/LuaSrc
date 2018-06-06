@@ -1,7 +1,12 @@
 *.db
+
 *.opendb
+
 *.lib
-*.filters
+
+
 *.user
+
 *.obj
+
 *.pdb
