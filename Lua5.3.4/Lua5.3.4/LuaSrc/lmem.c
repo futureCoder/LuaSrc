@@ -73,6 +73,7 @@ l_noret luaM_toobig (lua_State *L) {
 
 /*
 ** generic allocation routine.
+** 封装了 l_alloc ,malloc realloc free均通过该接口实现.
 */
 void *luaM_realloc_ (lua_State *L, void *block, size_t osize, size_t nsize) {
   void *newblock;

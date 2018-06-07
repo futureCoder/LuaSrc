@@ -1231,7 +1231,14 @@ LUA_API const char *lua_getupvalue (lua_State *L, int funcindex, int n) {
   return name;
 }
 
-
+/*
+** upvalue 在 C 中类型为 UpVal ，也是一个 GCObject 。
+** 但这里被特殊处理。为什么会这样？因为 Lua 的 GC 可以分步扫描。
+** 别的类型被新创建时，都可以直接作为一个白色节点（新节点）挂接在整个系统中。
+** 但 upvalue 却是对已有的对象的间接引用，不是新数据。
+** 一旦 GC 在 mark 的过程中（ gc 状态为 GCSpropagate ），则需增加屏障 luaC_barrier 。
+** UpValue与闭包的关系见 https://blog.csdn.net/chenjiayi_yun/article/details/25219937 
+*/
 LUA_API const char *lua_setupvalue (lua_State *L, int funcindex, int n) {
   const char *name;
   TValue *val = NULL;  /* to avoid warnings */

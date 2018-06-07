@@ -156,13 +156,17 @@ typedef struct global_State {
 
 /*
 ** 'per thread' state
+** 这是写 C 和 Lua 交互时用的最多的数据类型。
+** 它表示了 lua vm 的某种状态。
+** 从实现上来说，更接近 lua 的一个 thread 以及其间包含的相关数据（堆栈、环境等等）。
+** 事实上，一个 lua_State 也是一个类型为 thread 的 GCObject 。
 */
 struct lua_State {
   CommonHeader;
   unsigned short nci;  /* number of items in 'ci' list */
   lu_byte status;
   StkId top;  /* first free slot in the stack */
-  global_State *l_G;
+  global_State *l_G;    /*一个完整的lua虚拟机在运行时可有多个lua_State，即多个thread。它们会共享的数据放在global_State *l_G域中*/
   CallInfo *ci;  /* call info for current function */
   const Instruction *oldpc;  /* last pc traced */
   StkId stack_last;  /* last free slot in the stack */

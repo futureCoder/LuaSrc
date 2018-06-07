@@ -75,6 +75,15 @@ typedef struct GCObject GCObject;
 /*
 ** Common Header for all collectable objects (in macro form, to be
 ** included in other objects)
+** 可GC的对象以单链表串起来。
+** 每个对象以lu_byte tt来识别类型，marked用于标记清除的工作。
+** 标记清除算法是一种简单的 GC 算法。
+** 每次 GC 过程，先以若干根节点开始，逐个把直接以及间接和它们相关的节点都做上标记。
+** 对于 Lua ，这个过程很容易实现。因为所有 GObject 都在同一个链表上，当标记完成后，遍历这个链表，把未被标记的节点一一删除即可。
+** Lua 在实际实现时，其实不只用一条链表维系所有 GCObject 。
+** 这是因为 string 类型有其特殊性。所有的 string 放在一张大的 hash 表中。
+** 它需要保证系统中不会有值相同的 string 被创建两份。
+** 故 string 是被单独管理的，而不串在 GCObject 的链表中。
 */
 #define CommonHeader	GCObject *next; lu_byte tt; lu_byte marked
 
@@ -96,6 +105,8 @@ struct GCObject {
 
 /*
 ** Union of all Lua values
+** Value 以 union 方式定义。
+** 如果是需要被 GC 管理的对象，就以 GCObject 指针形式保存，否则直接存值。
 */
 typedef union Value {
   GCObject *gc;    /* collectable objects */
@@ -109,7 +120,10 @@ typedef union Value {
 
 #define TValuefields	Value value_; int tt_
 
-
+/*
+** 在代码的其它部分，并不直接使用 Value 类型，而是 TValue 类型。
+** 它比 Value 多了一个类型标识。用 int tt 记录。
+*/
 typedef struct lua_TValue {
   TValuefields;
 } TValue;
