@@ -373,7 +373,7 @@ typedef struct Table {
 ** `module' operation for hashing (size is always a power of 2)
 */
 // (size&(size-1))==0是检查size是2的次幂
-// (s) & ((size)-1)) = s % size
+// (s) & ((size)-1)) = s % size , 这个等式的前提是size必须是2的次幂
 #define lmod(s,size) \
 	(check_exp((size&(size-1))==0, (cast(int, (s) & ((size)-1)))))
 
