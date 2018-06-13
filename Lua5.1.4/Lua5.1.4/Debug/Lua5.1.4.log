@@ -1,0 +1,7 @@
+﻿  lstring.c
+e:\mygit\lua\lua5.1.4\lua5.1.4\luasrc\lstring.c : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+e:\mygit\lua\lua5.1.4\lua5.1.4\luasrc\lua.h : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+e:\mygit\lua\lua5.1.4\lua5.1.4\luasrc\lobject.h : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+e:\mygit\lua\lua5.1.4\lua5.1.4\luasrc\lstate.h : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+e:\mygit\lua\lua5.1.4\lua5.1.4\luasrc\lgc.h : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+e:\mygit\lua\lua5.1.4\lua5.1.4\luasrc\lstring.c(84): error C2065: “l1”: 未声明的标识符

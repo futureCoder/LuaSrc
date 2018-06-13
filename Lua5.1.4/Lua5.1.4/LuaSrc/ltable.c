@@ -87,10 +87,10 @@ static Node *hashnum (const Table *t, lua_Number n) {
   unsigned int a[numints];
   int i;
   if (luai_numeq(n, 0))  /* avoid problems with -0 */
-    return gnode(t, 0);
+    return gnode(t, 0);  /* (&(t)->node[0]) */
   memcpy(a, &n, sizeof(a));
   for (i = 1; i < numints; i++) a[0] += a[i];
-  return hashmod(t, a[0]);
+  return hashmod(t, a[0]);  /* (&(t)->node[((a[0]) % ((sizenode(t)-1)|1))]) */
 }
 
 
@@ -121,6 +121,9 @@ static Node *mainposition (const Table *t, const TValue *key) {
 ** the array part of the table, -1 otherwise.
 */
 // 在数组中寻找一个key, 如果找到则返回在数组中的索引, 否则返回-1
+/*
+** 如果key是luaNumber类型(即可以作为表中数组key)则返回key值，否则返回-1
+*/
 static int arrayindex (const TValue *key) {
   if (ttisnumber(key)) {
     lua_Number n = nvalue(key);
@@ -203,6 +206,12 @@ int luaH_next (lua_State *L, Table *t, StkId key) {
 */
 
 // 只有利用率超过50%的数组元素会进入数组,否则进去hash
+/*
+** 以2的次幂为一步来看当前长度下数组利用率是否会超过50%
+** 如果超过的话，记录次幂值和在当前次幂下有效元素数量
+** 次幂值用来决定新表中数组部分分配大小
+** 有效元素数量用来和表中总有效元素数量一起决定新表hash部分元素数量
+*/
 static int computesizes (int nums[], int *narray) {
   int i;
   int twotoi;  /* 2^i */
@@ -210,7 +219,7 @@ static int computesizes (int nums[], int *narray) {
   int na = 0;  /* number of elements to go to array part */
   int n = 0;  /* optimal size for array part */
 
-  // 这个循环完毕后,最重要的na存放的是数组部分的数据数量,而n是
+  // 这个循环完毕后,最重要的na存放的是数组部分的有效数据数量,而n是
   // na满足这个条件:在
   for (i = 0, twotoi = 1; twotoi/2 < *narray; i++, twotoi *= 2) {
     if (nums[i] > 0) {
@@ -270,6 +279,8 @@ static int numusearray (const Table *t, int *nums) {
 
 // 传入nums数组, 它的意义是:nums[i] = number of keys between 2^(i-1) and 2^i
 // 同时计算在hash中的整数数量,将数值更新到数组大小中
+// ause是hash中key类型为number的数量，totaluse则为使用key的总量
+// 函数结束后会通过pnasize更新表中key类型为number的数量，返回有效key总量
 static int numusehash (const Table *t, int *nums, int *pnasize) {
   int totaluse = 0;  /* total number of elements */
   int ause = 0;  /* summation of `nums' */
@@ -347,7 +358,7 @@ static void resize (lua_State *L, Table *t, int nasize, int nhsize) {
     for (i=nasize; i<oldasize; i++) {
       // 如果多出来的部分元素不为nil
       if (!ttisnil(&t->array[i]))
-    	// 以i + 1为key, 将i的数据插入hash部分
+    	// 以i + 1为key, 将i的数据插入hash部分或array部分
         setobjt2t(L, luaH_setnum(L, t, i+1), &t->array[i]);
     }
     /* shrink array */
@@ -497,11 +508,11 @@ const TValue *luaH_getnum (Table *t, int key) {
   else {
 	// 否则在hash部分中
     lua_Number nk = cast_num(key);
-    Node *n = hashnum(t, nk);
+    Node *n = hashnum(t, nk);   /* 得到nk对应的hash桶 */
     do {  /* check whether `key' is somewhere in the chain */
-      if (ttisnumber(gkey(n)) && luai_numeq(nvalue(gkey(n)), nk))
-        return gval(n);  /* that's it */
-      else n = gnext(n);
+      if (ttisnumber(gkey(n)) && luai_numeq(nvalue(gkey(n)), nk))   /* 如果key类型是luaNumber并且找到的key值和生成的key值相同 */
+        return gval(n);  /* that's it 返回该Node中value域的地址 */
+      else n = gnext(n);    /* 指向下一个冲突Node */
     } while (n);
     return luaO_nilobject;
   }
